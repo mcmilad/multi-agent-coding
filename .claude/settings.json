@@ -1,0 +1,284 @@
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "0",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "ENABLE_TOOL_SEARCH": "auto:5",
+    "MAX_MCP_OUTPUT_TOKENS": "50000",
+    "ENABLE_PROMPT_CACHING_1H": "1"
+  },
+  "availableModels": [
+    "opus",
+    "opus[1m]",
+    "sonnet",
+    "haiku",
+    "fable"
+  ],
+  "enabledPlugins": {
+    "atlassian@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "aws-core@claude-plugins-official": true,
+    "aws-serverless@claude-plugins-official": true,
+    "aws-agents@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_selftest.py\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/spec_gate.py\" prompt"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrail_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/spec_gate.py\" write"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/claim_gate.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__(createJiraIssue|editJiraIssue)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_issue_format_check.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__transitionJiraIssue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_transition_verify_gate.py\"",
+            "timeout": 300
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__(executeWrite|executeDestructive)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_execute_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent_spawn_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/aws_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*aws.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/aws_guard.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__(createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addOrEditJiraIssueComment|searchJiraIssuesUsingJql|getJiraIssue|executeRead)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_mirror_journal.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__transitionJiraIssue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_transition_sentinel_finalize.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch|WebSearch|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/untrusted_content_flag.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__.*[Aa]tlassian.*__transitionJiraIssue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/jira_transition_sentinel_finalize.py\""
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/teammate_idle_workcheck.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(~/.aws/credentials)",
+      "Read(~/.ssh/**)",
+      "Read(**/*.pem)",
+      "Edit(/.claude/approvals/**)",
+      "Edit(~/.claude/harness/**)",
+      "Bash(claude *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force)",
+      "Bash(git push * --force *)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git config --global *)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(sudo *)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [
+      "gh *"
+    ],
+    "filesystem": {
+      "allowWrite": [
+        "~/.aws/cli/cache",
+        "~/.aws/sso/cache",
+        "~/.aws-sam",
+        "~/.npm",
+        "~/.cache"
+      ],
+      "denyWrite": [
+        "./.claude/gates.json",
+        "./.claude/capabilities.json",
+        "./.claude/jira-config.json",
+        "./.claude/approvals",
+        "./.claude/aws-sandbox.json",
+        "./.claude/hooks",
+        "./.claude/agents",
+        "./.claude/rules",
+        "./.claude/skills",
+        "./.claude/settings.json",
+        "./.claude/settings.local.json",
+        "./.github/workflows",
+        "./.git/config",
+        "./.git/commondir",
+        "./.git/hooks",
+        "./.git/claude-harness/jira-mirror",
+        "./scripts/harness_admin.py",
+        "~/.claude/harness"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "*.github.com",
+        "*.githubusercontent.com",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "registry.npmjs.org",
+        "*.amazonaws.com",
+        "*.aws.amazon.com",
+        "*.atlassian.net"
+      ]
+    },
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.ssh",
+          "mode": "deny"
+        }
+      ],
+      "envVars": [
+        {
+          "name": "JIRA_API_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "JIRA_EMAIL",
+          "mode": "deny"
+        }
+      ]
+    }
+  }
+}

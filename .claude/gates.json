@@ -1,0 +1,6 @@
+{
+  "agentChecks": [
+    {"name": "lint", "command": ["{python}", "-m", "ruff", "check", "."]},
+    {"name": "tests", "when": "review", "command": ["{python}", "-m", "pytest", "-q", "-n", "auto"]}
+  ]
+}

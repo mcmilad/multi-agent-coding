@@ -1,0 +1,2 @@
+# Lessons are appended to from parallel branches; keep both sides instead of conflicting.
+.claude/lessons/*.md merge=union

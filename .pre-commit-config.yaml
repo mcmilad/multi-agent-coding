@@ -1,0 +1,16 @@
+# Local hooks only: they need nothing but the pinned dev environment, so they
+# run the same way offline, in a worktree and in CI.
+repos:
+  - repo: local
+    hooks:
+      - id: secret-scan
+        name: secret scan (tracked files)
+        entry: .venv/bin/python -m pytest -q tests/test_no_tracked_credentials.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: ruff
+        name: ruff
+        entry: .venv/bin/python -m ruff check
+        language: system
+        types: [python]

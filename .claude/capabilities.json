@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "note": "What the harness needs installed and connected, by workload profile. `core` always applies; the planner adds the profiles a spec calls for. `version` is the release this configuration was last verified against; null means no version was recorded and scripts/doctor.py reports it as unpinned. Each plugin is taken from exactly one marketplace.",
+  "profiles": {
+    "core": {
+      "description": "Orchestration, review and repository hygiene. Needed for every run.",
+      "plugins": [
+        {"name": "atlassian", "marketplace": "claude-plugins-official", "version": "b74220d41142", "required": true, "why": "Jira is the orchestration surface"},
+        {"name": "context7", "marketplace": "claude-plugins-official", "version": "c07c748f1c68", "required": true, "why": "current library documentation"},
+        {"name": "feature-dev", "marketplace": "claude-plugins-official", "version": "1.0.1", "required": false, "why": "code exploration and architecture subagents"},
+        {"name": "pr-review-toolkit", "marketplace": "claude-plugins-official", "version": null, "required": true, "why": "specialised review passes"},
+        {"name": "security-guidance", "marketplace": "claude-plugins-official", "version": null, "required": false, "why": "security review guidance"},
+        {"name": "commit-commands", "marketplace": "claude-plugins-official", "version": "1.0.1", "required": false, "why": "commit and pull-request flow"},
+        {"name": "github", "marketplace": "claude-plugins-official", "version": null, "required": false, "why": "pull requests; the gh CLI is the fallback"}
+      ],
+      "mcpServers": [
+        {"match": "atlassian", "required": true, "why": "issue create, claim, transition, comment"},
+        {"match": "context7", "required": false, "why": "library documentation lookup"}
+      ],
+      "clis": [
+        {"name": "git", "required": true},
+        {"name": "python3", "required": true},
+        {"name": "gh", "required": false, "why": "pull requests when the GitHub server is unavailable"}
+      ]
+    },
+    "serverless": {
+      "description": "Default stack: AWS Lambda, API Gateway, DynamoDB or Aurora, Python, CDK or SAM.",
+      "plugins": [
+        {"name": "aws-core", "marketplace": "claude-plugins-official", "version": "1.1.0", "required": true, "why": "AWS API access (aws-mcp), CDK, CloudFormation, IAM, observability"},
+        {"name": "aws-serverless", "marketplace": "claude-plugins-official", "version": "1.3.0", "required": true, "why": "Lambda, API Gateway, SAM build and deploy"}
+      ],
+      "mcpServers": [
+        {"match": "aws-mcp", "required": true, "why": "live AWS API calls, documentation, regional availability; used by lead, architect, devops, coding and review"},
+        {"match": "aws-serverless", "required": true, "why": "SAM lifecycle and Lambda guidance"},
+        {"match": "awsknowledge", "required": false, "why": "AWS documentation search"}
+      ],
+      "clis": [
+        {"name": "aws", "required": true},
+        {"name": "sam", "required": true},
+        {"name": "uv", "required": true, "why": "runs the AWS MCP servers"},
+        {"name": "node", "required": false, "why": "needed for CDK"},
+        {"name": "cdk", "required": false, "why": "when the spec chooses CDK over SAM"},
+        {"name": "docker", "required": false, "why": "container-based Lambda builds and local invoke"}
+      ]
+    },
+    "traditional": {
+      "description": "Containers and relational data, when a requirement or capacity target rules out serverless.",
+      "plugins": [
+        {"name": "aws-core", "marketplace": "claude-plugins-official", "version": "1.1.0", "required": true, "why": "ECS/Fargate, EC2, RDS guidance and AWS API access"}
+      ],
+      "mcpServers": [
+        {"match": "aws-mcp", "required": true, "why": "live AWS API calls and documentation"}
+      ],
+      "clis": [
+        {"name": "aws", "required": true},
+        {"name": "docker", "required": true},
+        {"name": "node", "required": false, "why": "needed for CDK"},
+        {"name": "cdk", "required": false}
+      ]
+    },
+    "agentic": {
+      "description": "AI agents on Amazon Bedrock AgentCore or the Claude API.",
+      "plugins": [
+        {"name": "aws-agents", "marketplace": "claude-plugins-official", "version": "1.0.0", "required": true, "why": "AgentCore build, deploy, harden"},
+        {"name": "aws-core", "marketplace": "claude-plugins-official", "version": "1.1.0", "required": true, "why": "Bedrock and AWS API access"}
+      ],
+      "mcpServers": [
+        {"match": "aws-mcp", "required": true, "why": "live AWS API calls and documentation"}
+      ],
+      "clis": [
+        {"name": "aws", "required": true},
+        {"name": "uv", "required": true}
+      ]
+    },
+    "frontend": {
+      "description": "Default stack: React, TypeScript, Vite. Browser automation for visual verification.",
+      "plugins": [
+        {"name": "frontend-design", "marketplace": "claude-plugins-official", "version": null, "required": true, "why": "design direction and non-generic UI"},
+        {"name": "playwright", "marketplace": "claude-plugins-official", "version": null, "required": true, "why": "drive and screenshot the running app"}
+      ],
+      "mcpServers": [
+        {"match": "playwright", "required": true, "why": "browser automation for the QA evaluator"},
+        {"match": "chrome-devtools", "required": false, "why": "Lighthouse accessibility and performance audits; register per README, pinned and localhost-only"}
+      ],
+      "clis": [
+        {"name": "node", "required": true},
+        {"name": "npm", "required": true},
+        {"name": "npx", "required": true, "why": "starts the Playwright server"}
+      ]
+    }
+  }
+}

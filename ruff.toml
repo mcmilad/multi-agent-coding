@@ -1,0 +1,6 @@
+# Lint gate for the harness. Kept to correctness rules; style is not policed here.
+target-version = "py38"
+extend-exclude = [".venv"]
+
+[lint]
+select = ["E9", "F"]
